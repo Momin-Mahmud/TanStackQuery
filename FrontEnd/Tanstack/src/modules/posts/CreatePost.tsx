@@ -3,14 +3,16 @@ import { createPost } from "../../api/post.api";
 import { useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Spinner from "../../common/Spinner";
+import { useNavigate } from "react-router-dom";
 
 const CreatePost = () => {
   const queryClient : any = useQueryClient()
-
+  const navigate = useNavigate()
   const addPost = useMutation({
     mutationFn: createPost,
     onSuccess: () => {
         queryClient.invalidateQueries(["posts"])
+        navigate("/posts")
     }
   })
   const currentAuthorID = useSelector((state:any)=>state.author.userID)
@@ -46,7 +48,9 @@ const CreatePost = () => {
         alignItems: "center",
       }}
     >
-      <div id="form-div">
+      {!currentAuthorID || !currentAuthorName ? <h1>Please select an  author first from authors list</h1> :
+      (
+        <div id="form-div">
         <span
           style={{
             fontSize: "30px",
@@ -58,7 +62,7 @@ const CreatePost = () => {
             alignItems: "center",
           }}
         >
-          Creating Post <br /> as <br />  <strong>{currentAuthorName}</strong>
+        Creating Post <br /> as <br />  <strong>{currentAuthorName}</strong>
         </span>
         <p className="name">
           <input
@@ -84,6 +88,8 @@ const CreatePost = () => {
           Submit
         </button>
       </div>
+      )}
+
     </div>
     )}
     </>

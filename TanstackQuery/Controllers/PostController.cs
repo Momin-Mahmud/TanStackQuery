@@ -102,5 +102,29 @@ namespace TanstackQuery.Controllers
             return Ok();
 
         }
+
+        [HttpGet("{id}/author")]
+
+        public async Task<ActionResult<Author>> GetPostAuthor(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest("PostId cannot be null or empty");
+            }
+
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null)
+            {
+                return NotFound("Post not found");
+            }
+
+            var author = await _context.Authors.FindAsync(post.AuthorId);
+            if (author == null)
+            {
+                return NotFound("Author not found");
+            }
+
+            return Ok(author);
+        }
     }
 }

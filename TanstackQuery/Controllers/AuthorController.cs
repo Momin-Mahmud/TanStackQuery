@@ -60,20 +60,37 @@ namespace TanstackQuery.Controllers
 
         public async Task<ActionResult> PutAuthor(string id, Author author)
         {
-            if (author == null || id != author.Id)
-                return BadRequest();
-            _context.Entry(author).State = EntityState.Modified;
+     
+
+            var existingAuthor = await _context.Authors.FindAsync(id);
+            if (existingAuthor == null)
+            {
+                return NotFound(); // Author with the provided id not found
+            }
+            existingAuthor.Name = author.Name;
+
             try
             {
                 await _context.SaveChangesAsync();
-
             }
-            catch (Exception ex)
+            catch (DbUpdateConcurrencyException)
             {
-                throw ex;
+                if (!AuthorExists(id))
+                {
+                    return NotFound(); // Author with the provided id doesn't exist
+                }
+                else
+                {
+                    throw; // Some other error occurred
+                }
             }
 
-            return Ok();
+            return Ok(author); 
+        }
+
+        private bool AuthorExists(string id)
+        {
+            return _context.Authors.Any(e => e.Id == id);
         }
 
         [HttpDelete("{id}")]

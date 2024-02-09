@@ -1,42 +1,35 @@
-import { useLocation } from "react-router-dom"
-import { getAuthorPosts } from "../../api/author.api"
-import { useEffect, useState } from "react"
+import { useLocation } from "react-router-dom";
+import { getAuthorPosts } from "../../api/author.api";
+import { useQuery } from "@tanstack/react-query";
+import Spinner from "../../common/Spinner";
 
 const AuthorPosts = () => {
-    const [posts, setPosts] = useState([])
-    const state = useLocation().state
-    const getPostsforAuthor = async () => {
+  const state = useLocation().state;
+  const postsData = useQuery({
+    queryKey: ["authors", state, "posts"],
+    queryFn: () => getAuthorPosts(state),
+  });
 
-        try {
-            let { status, data } = await getAuthorPosts(state)
-            if (status === 200) {
-                setPosts(data)
-                console.log(data)
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-    useEffect(() => {
-        getPostsforAuthor()
-    },[])
-
-    return (
+  return (
+    <>
+      {postsData?.isLoading ? (
+        <Spinner />
+      ) : (
         <div>
-            <h1>Posts</h1>
-            <p>
-                {posts.map((post: any) => (
-                    <div>
-                        <h2>{post.title}</h2>
-                        <p>{post.description}</p>
-                        <hr/>
-                    </div>
-                ))}
-            </p>
+          <h1>Posts</h1>
+          <p>
+            {postsData?.data?.data?.map((post: any) => (
+              <div>
+                <h2>{post.title}</h2>
+                <p>{post.description}</p>
+                <hr />
+              </div>
+            ))}
+          </p>
         </div>
+      )}
+    </>
+  );
+};
 
-    )
-}
-
-export default AuthorPosts
+export default AuthorPosts;
