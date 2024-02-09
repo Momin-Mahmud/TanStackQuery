@@ -12,10 +12,11 @@ export const createAuthor = async (data: any) => {
     return response
 }
 
-export const getAuthorPosts = async (id: any) => {
-    const response = await axios.get(`${endPoint}/Author/${id}/posts`)
-    return response
+export const getAuthorPostsPaginated = async ( id: any, {  pageParam }:any) => {
+    const response = await axios.get(`${endPoint}/Author/${id}/posts?page=${pageParam}`);
+    return response;
 }
+
 
 export const updateAuthor : any = async (id: any, data: any) => {
     const response = await axios.put(`${endPoint}/Author/${id}`, data)

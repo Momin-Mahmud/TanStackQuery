@@ -1,5 +1,9 @@
 import axios from "axios";
 
+interface GetPostsPaginatedParams {
+    pageParam: number;
+}
+
 const endPoint = "https://localhost:7002/api";
 
 export const getPosts = async () => {
@@ -19,5 +23,10 @@ export const getPost = async (id: any) => {
 
 export const getPostAuthor = async (id: any) => {
     const response = await axios.get(`${endPoint}/Post/${id}/author`);
+    return response;
+}
+
+export const getPostsPaginated = async ({ pageParam }:any) => {
+    const response = await axios.get(`${endPoint}/Post/paginated?page=${pageParam}`);
     return response;
 }

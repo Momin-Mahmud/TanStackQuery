@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TanstackQuery.Context;
 using TanstackQuery.Models;
+using static TanstackQuery.Controllers.PostController;
 
 namespace TanstackQuery.Controllers
 {
@@ -112,7 +113,7 @@ namespace TanstackQuery.Controllers
         }
 
         [HttpGet("{authorId}/posts")]
-        public async Task<ActionResult<IEnumerable<Post>>> GetPostsByAuthor(string authorId)
+        public async Task<ActionResult<PaginationResult<Post>>> GetPostsByAuthor(string authorId, [FromQuery(Name = "page")] int page = 1, [FromQuery(Name = "pageSize")] int pageSize = 2)
         {
             var author = await _context.Authors.Include(a => a.Posts).FirstOrDefaultAsync(a => a.Id == authorId);
             if (author == null)
@@ -120,7 +121,32 @@ namespace TanstackQuery.Controllers
                 return NotFound("Author not found");
             }
 
-            return Ok(author.Posts);
+            var totalPosts = author.Posts.Count();
+            var totalPages = (int)Math.Ceiling(totalPosts / (double)pageSize);
+
+            if (page < 1 || page > totalPages)
+            {
+                return BadRequest("Invalid page number");
+            }
+
+            var posts = author.Posts
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = new PaginationResult<Post>
+            {
+                CurrentPage = page,
+                TotalPages = totalPages,
+                Items = posts
+            };
+
+            if (page < totalPages)
+            {
+                result.NextPage = page + 1;
+            }
+
+            return Ok(result);
         }
     }
 }

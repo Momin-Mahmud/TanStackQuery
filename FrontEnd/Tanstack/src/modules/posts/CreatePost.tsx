@@ -4,6 +4,8 @@ import { useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Spinner from "../../common/Spinner";
 import { useNavigate } from "react-router-dom";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const CreatePost = () => {
   const queryClient : any = useQueryClient()
@@ -32,6 +34,7 @@ const CreatePost = () => {
   };
 
   const handleSubmit = (e:any) => {
+    debugger
     e.preventDefault()
     addPost.mutate(formData)
   };
@@ -41,7 +44,9 @@ const CreatePost = () => {
         <div
       id="form-main"
       style={{
+        overflow: "auto",
         display: "flex",
+        paddingTop: "600px",
         flexDirection: "column",
         gap: "10px",
         justifyContent: "center",
@@ -74,14 +79,20 @@ const CreatePost = () => {
             id="title"
           />
         </p>
-        <p className="text">
-          <textarea
-          onChange={(event) => handleChange(event)}
-            name="description"
-            className="validate[required,length[6,300]] feedback-input"
+        <p  style={{
+                  overflow: "auto",
+                  maxHeight: "calc(100vh-300px)",
+        }}>
+          <ReactQuill  
+            theme="snow"
+            onChange={(event) => setFormData({...formData, description: event})}
+            value={formData.description}
+            className="min-size"
             id="description"
             placeholder="Content"
-          ></textarea>
+          >
+
+          </ReactQuill>
         </p>
 
         <button onClick={handleSubmit} type="submit" id="button-blue">

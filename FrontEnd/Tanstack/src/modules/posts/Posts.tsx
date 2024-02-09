@@ -1,53 +1,113 @@
 import { useNavigate } from "react-router-dom";
-import { getPosts } from "../../api/post.api";
+import { getPosts, getPostsPaginated } from "../../api/post.api";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { errorToast } from "../../common/CustomToast";
 import Spinner from "../../common/Spinner";
-import { useQuery } from "@tanstack/react-query";
 
 const Posts = () => {
   const navigate = useNavigate();
-  const postData: any = useQuery({
-    queryKey: ["posts"],
-    queryFn: getPosts,
+  const {
+    status,
+    error,
+    data,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  }: any = useInfiniteQuery<any>({
+    queryKey: ["posts", "paginated"],
+    queryFn: async ({ pageParam = 1 }) => {
+      return await getPostsPaginated({ pageParam });
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      return lastPage.data.nextPage ? lastPage.data.nextPage : undefined;
+    },
   });
+
+  error && errorToast(data.error.message);
   return (
     <>
-      {postData?.isLoading ? (
-        <Spinner />
-      ) : (
-        <div>
-          <span
-            onClick={() => {
-              navigate("/posts/create");
-            }}
-            style={{
-              fontWeight: "bold",
-              display: "flex",
-              width: "full",
-              height: "50px",
-              borderRadius: "10px",
-              border: "1px solid black",
-              cursor: "pointer",
-              backgroundColor: "#CF1D2D",
-              color: "black",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-           +  Create a Post
-          </span>
-          <h1>Posts</h1>
-          <div>
-            {postData?.data?.data?.map((post: any) => (
-              <div style={{ display: "flex", flexDirection: "column", border: "2px solid #CF1D2D", margin: "20px", borderRadius: "10px", padding: "10px", gap: "10px" }} key={post.id}>
-                <span  style={{display:"flex", justifyContent:"space-between", alignItems:"center", gap:"20px"}}>
-                <h2>{post.title || "No Title"}</h2>
-                <span style={{ cursor: "pointer", color: "blue", textDecoration : "underline" }} onClick={() => navigate(`/posts/${post.id}`)}>See full Post &#8594;</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {status === "loading" ? <Spinner /> : (
+           <div>
+           <div>
+             <span
+               onClick={() => {
+                 navigate("/posts/create");
+               }}
+               style={{
+                 fontWeight: "bold",
+                 display: "flex",
+                 height: "50px",
+                 borderRadius: "10px",
+                 border: "1px solid white",
+                 cursor: "pointer",
+                 backgroundColor: "none",
+                 color: "white",
+                 width: "fit-content",
+                 padding: "0px 20px",
+                 margin: "auto",
+                 justifyContent: "center",
+                 alignItems: "center",
+               }}
+             >
+               + Create a Post
+             </span>
+             <h1>Posts</h1>
+             {data?.pages?.map((page: any) => {
+               return page.data.items.map((post: any) => (
+                 <div
+                   key={post.id}
+                   style={{
+                     gap: "10px",
+                     flexDirection: "column",
+                     display: "flex",
+                     width: "600px",
+                     height: "50px",
+                     borderRadius: "10px",
+                     border: "1px solid white",
+                     cursor: "pointer",
+                     color: "white",
+                     justifyContent: "center",
+                     alignItems: "center",
+                     margin: "30px",
+                     padding: "20px",
+                     textOverflow: "ellipsis",
+                     overflow: "auto",
+                   }}
+                   onClick={() => navigate(`/posts/${post.id}`)}
+                 >
+                   {post.title}
+                 </div>
+               ));
+             })}
+           </div>
+           {isFetchingNextPage ? (
+             <div>
+               <Spinner />
+             </div>
+           ) : (
+             hasNextPage && (
+               <button
+                 style={{
+                   width: "full",
+                   height: "50px",
+                   borderRadius: "10px",
+                   border: "1px solid black",
+                   cursor: "pointer",
+                   backgroundColor: "white",
+                   color: "black",
+                   justifyContent: "center",
+                   alignItems: "center",
+                 }}
+                 onClick={() => fetchNextPage()}
+               >
+                 Load More
+               </button>
+             )
+           )}
+         </div>
       )}
+   
     </>
   );
 };

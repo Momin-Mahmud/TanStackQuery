@@ -16,6 +16,9 @@ namespace TanstackQuery.Controllers
             _context = applicationDbContext;
         }
 
+
+
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Post>>> GetPosts ()
         {
@@ -126,5 +129,44 @@ namespace TanstackQuery.Controllers
 
             return Ok(author);
         }
+
+        [HttpGet("paginated")]
+        public async Task<ActionResult<PaginationResult<Post>>> GetPostsPaginated([FromQuery(Name = "page")] int page = 1, [FromQuery(Name = "pageSize")] int pageSize = 5)
+        {
+            var totalPosts = await _context.Posts.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalPosts / (double)pageSize);
+
+            if (page < 1 || page > totalPages)
+            {
+                return BadRequest("Invalid page number");
+            }
+
+            var posts = await _context.Posts
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new PaginationResult<Post>
+            {
+                CurrentPage = page,
+                TotalPages = totalPages,
+                Items = posts
+            };
+
+            if (page < totalPages)
+            {
+                result.NextPage = page + 1;
+            }
+
+            return Ok(result);
+        }
+        public class PaginationResult<T>
+        {
+            public int CurrentPage { get; set; }
+            public int TotalPages { get; set; }
+            public IEnumerable<T> Items { get; set; }
+            public int? NextPage { get; set; }
+        }
+
     }
 }
